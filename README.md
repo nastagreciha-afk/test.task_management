@@ -38,13 +38,6 @@ composer install
 # 2. Запуск через Docker
 ./vendor/bin/sail up -d
 
-# if you have error
-rm -rf storage/bootstrap/cache
-mkdir -p storage/framework/sessions
-mkdir -p storage/framework/views
-mkdir -p storage/framework/cache
-mkdir -p bootstrap/cache
-
 # 3. Генерация ключей
 ./vendor/bin/sail artisan key:generate
 ./vendor/bin/sail artisan jwt:secret
@@ -68,9 +61,21 @@ mkdir -p storage/api-docs && chmod -R 775 storage/api-docs
 
 bash test-api.sh http://localhost/api - Запуск автоматического теста ответов API
 
+**!!! ATTENTION !!!**
+```
+# if you have error 
+rm -rf storage/bootstrap/cache
+mkdir -p storage/framework/sessions
+mkdir -p storage/framework/views
+mkdir -p storage/framework/cache
+mkdir -p bootstrap/cache
+```
+
 После запуска:
 - API: `http://localhost/api`
 - Swagger UI: `http://localhost/api/documentation`
+
+
 
 ## 👤 Тестовые пользователи
 
