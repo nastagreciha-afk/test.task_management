@@ -21,12 +21,26 @@ class UserSeeder extends Seeder
         ]);
         $admin->roles()->attach($adminRole);
 
-        $user = User::create([
+        $user1 = User::create([
             'name' => 'User',
             'email' => 'user@example.com',
             'password' => Hash::make('password'),
         ]);
-        $user->roles()->attach($userRole);
+        $user1->roles()->attach($userRole);
+
+        $user2 = User::create([
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+            'password' => Hash::make('password'),
+        ]);
+        $user2->roles()->attach($userRole);
+
+        $user3 = User::create([
+            'name' => 'Jane Smith',
+            'email' => 'jane@example.com',
+            'password' => Hash::make('password'),
+        ]);
+        $user3->roles()->attach($userRole);
     }
 }
 

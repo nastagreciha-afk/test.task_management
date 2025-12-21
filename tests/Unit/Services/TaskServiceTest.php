@@ -50,7 +50,8 @@ class TaskServiceTest extends TestCase
         $task = Mockery::mock(Task::class);
         $expectedArray = ['id' => 1, 'title' => 'Test Task'];
 
-        Task::shouldReceive('findOrFail')
+        $this->taskRepository
+            ->shouldReceive('find')
             ->once()
             ->with($taskId)
             ->andReturn($task);
@@ -60,10 +61,8 @@ class TaskServiceTest extends TestCase
             ->with('view', $task)
             ->andReturn(true);
 
-        $this->taskRepository
-            ->shouldReceive('getTask')
+        $task->shouldReceive('toArray')
             ->once()
-            ->with($taskId)
             ->andReturn($expectedArray);
 
         $result = $this->taskService->getTask($taskId);
@@ -78,6 +77,7 @@ class TaskServiceTest extends TestCase
             'description' => 'Task description',
             'status' => 'pending',
         ];
+        $task = Mockery::mock(Task::class);
         $expectedArray = ['id' => 1, 'title' => 'New Task'];
 
         Gate::shouldReceive('authorize')
@@ -89,6 +89,10 @@ class TaskServiceTest extends TestCase
             ->shouldReceive('createTask')
             ->once()
             ->with($taskData)
+            ->andReturn($task);
+
+        $task->shouldReceive('toArray')
+            ->once()
             ->andReturn($expectedArray);
 
         $result = $this->taskService->createTask($taskData);
@@ -101,9 +105,11 @@ class TaskServiceTest extends TestCase
         $taskId = 1;
         $taskData = ['title' => 'Updated Task'];
         $task = Mockery::mock(Task::class);
+        $updatedTask = Mockery::mock(Task::class);
         $expectedArray = ['id' => 1, 'title' => 'Updated Task'];
 
-        Task::shouldReceive('findOrFail')
+        $this->taskRepository
+            ->shouldReceive('find')
             ->once()
             ->with($taskId)
             ->andReturn($task);
@@ -116,7 +122,11 @@ class TaskServiceTest extends TestCase
         $this->taskRepository
             ->shouldReceive('updateTask')
             ->once()
-            ->with($taskId, $taskData)
+            ->with($task, $taskData)
+            ->andReturn($updatedTask);
+
+        $updatedTask->shouldReceive('toArray')
+            ->once()
             ->andReturn($expectedArray);
 
         $result = $this->taskService->updateTask($taskId, $taskData);
@@ -129,7 +139,8 @@ class TaskServiceTest extends TestCase
         $taskId = 1;
         $task = Mockery::mock(Task::class);
 
-        Task::shouldReceive('findOrFail')
+        $this->taskRepository
+            ->shouldReceive('find')
             ->once()
             ->with($taskId)
             ->andReturn($task);
@@ -142,9 +153,11 @@ class TaskServiceTest extends TestCase
         $this->taskRepository
             ->shouldReceive('deleteTask')
             ->once()
-            ->with($taskId);
+            ->with($task);
 
         $this->taskService->deleteTask($taskId);
+
+        $this->assertTrue(true);
     }
 }
 

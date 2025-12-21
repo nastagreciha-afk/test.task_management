@@ -2,16 +2,19 @@
 
 namespace Tests\Unit\Repositories;
 
+use App\Enums\TaskStatus;
+use App\Models\Role;
 use App\Models\Task;
 use App\Models\User;
 use App\Repositories\TaskRepository;
-use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
-use Mockery;
 use Tests\TestCase;
 
 class TaskRepositoryTest extends TestCase
 {
+    use RefreshDatabase;
+
     private TaskRepository $taskRepository;
 
     protected function setUp(): void
@@ -20,210 +23,111 @@ class TaskRepositoryTest extends TestCase
         $this->taskRepository = new TaskRepository();
     }
 
-    protected function tearDown(): void
-    {
-        Mockery::close();
-        parent::tearDown();
-    }
-
     public function test_get_tasks_filters_by_user_id_when_user_is_not_admin(): void
     {
-        $user = Mockery::mock(User::class);
-        $user->id = 1;
-        $user->shouldReceive('hasRole')
-            ->with('admin')
-            ->once()
-            ->andReturn(false);
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
 
-        Auth::shouldReceive('user')
-            ->once()
-            ->andReturn($user);
+        Task::factory()->create(['user_id' => $user->id]);
+        Task::factory()->create(['user_id' => $otherUser->id]);
+
+        Auth::setUser($user);
 
         $filters = ['per_page' => 15];
-        $query = Mockery::mock(\Illuminate\Database\Eloquent\Builder::class);
-        $paginator = Mockery::mock(LengthAwarePaginator::class);
-
-        Task::shouldReceive('query')
-            ->once()
-            ->andReturn($query);
-
-        $query->shouldReceive('where')
-            ->with('user_id', 1)
-            ->once()
-            ->andReturnSelf();
-
-        $query->shouldReceive('paginate')
-            ->with(15)
-            ->once()
-            ->andReturn($paginator);
-
         $result = $this->taskRepository->getTasks($filters);
 
-        $this->assertSame($paginator, $result);
+        $this->assertCount(1, $result->items());
+        $this->assertEquals($user->id, $result->items()[0]->user_id);
     }
 
     public function test_get_tasks_does_not_filter_by_user_id_when_user_is_admin(): void
     {
-        $user = Mockery::mock(User::class);
-        $user->shouldReceive('hasRole')
-            ->with('admin')
-            ->once()
-            ->andReturn(true);
+        $admin = User::factory()->create();
+        $otherUser = User::factory()->create();
 
-        Auth::shouldReceive('user')
-            ->once()
-            ->andReturn($user);
+        $adminRole = Role::factory()->create(['name' => 'admin']);
+        $admin->roles()->attach($adminRole);
+
+        Task::factory()->create(['user_id' => $admin->id]);
+        Task::factory()->create(['user_id' => $otherUser->id]);
+
+        Auth::setUser($admin);
 
         $filters = ['per_page' => 15];
-        $query = Mockery::mock(\Illuminate\Database\Eloquent\Builder::class);
-        $paginator = Mockery::mock(LengthAwarePaginator::class);
-
-        Task::shouldReceive('query')
-            ->once()
-            ->andReturn($query);
-
-        $query->shouldReceive('where')
-            ->with('status', 'pending')
-            ->never();
-
-        $query->shouldReceive('paginate')
-            ->with(15)
-            ->once()
-            ->andReturn($paginator);
-
         $result = $this->taskRepository->getTasks($filters);
 
-        $this->assertSame($paginator, $result);
+        $this->assertCount(2, $result->items());
     }
 
     public function test_get_tasks_filters_by_status_when_provided(): void
     {
-        $user = Mockery::mock(User::class);
-        $user->shouldReceive('hasRole')
-            ->with('admin')
-            ->once()
-            ->andReturn(true);
+        $admin = User::factory()->create();
+        $adminRole = Role::factory()->create(['name' => 'admin']);
+        $admin->roles()->attach($adminRole);
 
-        Auth::shouldReceive('user')
-            ->once()
-            ->andReturn($user);
+        Task::factory()->create(['status' => TaskStatus::PENDING]);
+        Task::factory()->create(['status' => TaskStatus::COMPLETED]);
+        Task::factory()->create(['status' => TaskStatus::COMPLETED]);
+
+        Auth::setUser($admin);
 
         $filters = ['status' => 'completed', 'per_page' => 10];
-        $query = Mockery::mock(\Illuminate\Database\Eloquent\Builder::class);
-        $paginator = Mockery::mock(LengthAwarePaginator::class);
-
-        Task::shouldReceive('query')
-            ->once()
-            ->andReturn($query);
-
-        $query->shouldReceive('where')
-            ->with('status', 'completed')
-            ->once()
-            ->andReturnSelf();
-
-        $query->shouldReceive('paginate')
-            ->with(10)
-            ->once()
-            ->andReturn($paginator);
-
         $result = $this->taskRepository->getTasks($filters);
 
-        $this->assertSame($paginator, $result);
+        $this->assertCount(2, $result->items());
+        foreach ($result->items() as $task) {
+            $this->assertEquals(TaskStatus::COMPLETED, $task->status);
+        }
     }
 
-    public function test_get_task_returns_task_array(): void
+    public function test_find_returns_task_model(): void
     {
-        $taskId = 1;
-        $task = Mockery::mock(Task::class);
-        $expectedArray = [
-            'id' => 1,
-            'title' => 'Test Task',
-            'status' => 'pending',
-        ];
+        $task = Task::factory()->create();
 
-        Task::shouldReceive('findOrFail')
-            ->once()
-            ->with($taskId)
-            ->andReturn($task);
+        $result = $this->taskRepository->find($task->id);
 
-        $task->shouldReceive('toArray')
-            ->once()
-            ->andReturn($expectedArray);
-
-        $result = $this->taskRepository->getTask($taskId);
-
-        $this->assertEquals($expectedArray, $result);
+        $this->assertInstanceOf(Task::class, $result);
+        $this->assertEquals($task->id, $result->id);
     }
 
-    public function test_create_task_returns_created_task_array(): void
+    public function test_create_task_returns_created_task_model(): void
     {
+        $user = User::factory()->create();
         $taskData = [
             'title' => 'New Task',
             'description' => 'Description',
             'status' => 'pending',
         ];
-        $expectedArray = ['id' => 1, 'title' => 'New Task'];
 
-        Auth::shouldReceive('id')
-            ->once()
-            ->andReturn(1);
-
-        $task = Mockery::mock(Task::class);
-        $task->shouldReceive('toArray')
-            ->once()
-            ->andReturn($expectedArray);
-
-        Task::shouldReceive('create')
-            ->once()
-            ->with(array_merge($taskData, ['user_id' => 1]))
-            ->andReturn($task);
+        Auth::setUser($user);
 
         $result = $this->taskRepository->createTask($taskData);
 
-        $this->assertEquals($expectedArray, $result);
+        $this->assertInstanceOf(Task::class, $result);
+        $this->assertEquals('New Task', $result->title);
+        $this->assertEquals($user->id, $result->user_id);
     }
 
-    public function test_update_task_returns_updated_task_array(): void
+    public function test_update_task_returns_updated_task_model(): void
     {
-        $taskId = 1;
+        $task = Task::factory()->create(['title' => 'Original Title']);
         $taskData = ['title' => 'Updated Task'];
-        $task = Mockery::mock(Task::class);
-        $expectedArray = ['id' => 1, 'title' => 'Updated Task'];
 
-        Task::shouldReceive('findOrFail')
-            ->once()
-            ->with($taskId)
-            ->andReturn($task);
+        $result = $this->taskRepository->updateTask($task, $taskData);
 
-        $task->shouldReceive('update')
-            ->once()
-            ->with($taskData)
-            ->andReturn(true);
-
-        $task->shouldReceive('toArray')
-            ->once()
-            ->andReturn($expectedArray);
-
-        $result = $this->taskRepository->updateTask($taskId, $taskData);
-
-        $this->assertEquals($expectedArray, $result);
+        $this->assertInstanceOf(Task::class, $result);
+        $this->assertEquals('Updated Task', $result->title);
+        $this->assertEquals($task->id, $result->id);
     }
 
     public function test_delete_task_deletes_task(): void
     {
-        $taskId = 1;
-        $task = Mockery::mock(Task::class);
+        $task = Task::factory()->create();
+        $taskId = $task->id;
 
-        Task::shouldReceive('findOrFail')
-            ->once()
-            ->with($taskId)
-            ->andReturn($task);
+        $this->taskRepository->deleteTask($task);
 
-        $task->shouldReceive('delete')
-            ->once()
-            ->andReturn(true);
-
-        $this->taskRepository->deleteTask($taskId);
+        $this->assertDatabaseMissing('tasks', ['id' => $taskId]);
     }
 }
 

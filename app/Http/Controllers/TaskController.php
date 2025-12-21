@@ -19,27 +19,27 @@ class TaskController extends Controller
     #[OA\Get(
         path: '/tasks',
         summary: 'Получить список задач',
-        tags: ['Tasks'],
         security: [['bearerAuth' => []]],
+        tags: ['Tasks'],
         parameters: [
             new OA\Parameter(
                 name: 'status',
-                in: 'query',
                 description: 'Фильтр по статусу',
+                in: 'query',
                 required: false,
                 schema: new OA\Schema(type: 'string', enum: ['pending', 'in_progress', 'completed'])
             ),
             new OA\Parameter(
                 name: 'page',
-                in: 'query',
                 description: 'Номер страницы',
+                in: 'query',
                 required: false,
                 schema: new OA\Schema(type: 'integer', example: 1)
             ),
             new OA\Parameter(
                 name: 'per_page',
-                in: 'query',
                 description: 'Количество элементов на странице',
+                in: 'query',
                 required: false,
                 schema: new OA\Schema(type: 'integer', example: 15)
             ),
@@ -84,7 +84,6 @@ class TaskController extends Controller
     #[OA\Post(
         path: '/tasks',
         summary: 'Создать новую задачу',
-        tags: ['Tasks'],
         security: [['bearerAuth' => []]],
         requestBody: new OA\RequestBody(
             required: true,
@@ -92,11 +91,12 @@ class TaskController extends Controller
                 required: ['title', 'status'],
                 properties: [
                     new OA\Property(property: 'title', type: 'string', maxLength: 255, example: 'Новая задача'),
-                    new OA\Property(property: 'description', type: 'string', nullable: true, example: 'Описание задачи'),
+                    new OA\Property(property: 'description', type: 'string', example: 'Описание задачи', nullable: true),
                     new OA\Property(property: 'status', type: 'string', enum: ['pending', 'in_progress', 'completed'], example: 'pending'),
                 ]
             )
         ),
+        tags: ['Tasks'],
         responses: [
             new OA\Response(
                 response: 201,
@@ -127,14 +127,14 @@ class TaskController extends Controller
     #[OA\Get(
         path: '/tasks/{id}',
         summary: 'Получить задачу по ID',
-        tags: ['Tasks'],
         security: [['bearerAuth' => []]],
+        tags: ['Tasks'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
+                description: 'ID задачи',
                 in: 'path',
                 required: true,
-                description: 'ID задачи',
                 schema: new OA\Schema(type: 'integer', example: 1)
             ),
         ],
@@ -169,27 +169,27 @@ class TaskController extends Controller
     #[OA\Put(
         path: '/tasks/{id}',
         summary: 'Обновить задачу',
-        tags: ['Tasks'],
         security: [['bearerAuth' => []]],
-        parameters: [
-            new OA\Parameter(
-                name: 'id',
-                in: 'path',
-                required: true,
-                description: 'ID задачи',
-                schema: new OA\Schema(type: 'integer', example: 1)
-            ),
-        ],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
                 properties: [
                     new OA\Property(property: 'title', type: 'string', maxLength: 255, example: 'Обновленная задача'),
-                    new OA\Property(property: 'description', type: 'string', nullable: true, example: 'Новое описание'),
+                    new OA\Property(property: 'description', type: 'string', example: 'Новое описание', nullable: true),
                     new OA\Property(property: 'status', type: 'string', enum: ['pending', 'in_progress', 'completed'], example: 'in_progress'),
                 ]
             )
         ),
+        tags: ['Tasks'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'ID задачи',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer', example: 1)
+            ),
+        ],
         responses: [
             new OA\Response(
                 response: 200,
@@ -222,14 +222,14 @@ class TaskController extends Controller
     #[OA\Delete(
         path: '/tasks/{id}',
         summary: 'Удалить задачу',
-        tags: ['Tasks'],
         security: [['bearerAuth' => []]],
+        tags: ['Tasks'],
         parameters: [
             new OA\Parameter(
                 name: 'id',
+                description: 'ID задачи',
                 in: 'path',
                 required: true,
-                description: 'ID задачи',
                 schema: new OA\Schema(type: 'integer', example: 1)
             ),
         ],
@@ -257,4 +257,5 @@ class TaskController extends Controller
         ]);
     }
 }
+
 

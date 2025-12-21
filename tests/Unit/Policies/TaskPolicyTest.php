@@ -30,7 +30,8 @@ class TaskPolicyTest extends TestCase
     public function test_view_returns_true_for_admin(): void
     {
         $admin = User::factory()->create();
-        $task = Task::factory()->create(['user_id' => 999]);
+        $otherUser = User::factory()->create();
+        $task = Task::factory()->create(['user_id' => $otherUser->id]);
 
         $admin->roles()->attach(
             \App\Models\Role::factory()->create(['name' => 'admin'])
@@ -67,7 +68,8 @@ class TaskPolicyTest extends TestCase
     public function test_update_returns_true_for_admin(): void
     {
         $admin = User::factory()->create();
-        $task = Task::factory()->create(['user_id' => 999]);
+        $otherUser = User::factory()->create();
+        $task = Task::factory()->create(['user_id' => $otherUser->id]);
 
         $admin->roles()->attach(
             \App\Models\Role::factory()->create(['name' => 'admin'])
@@ -96,7 +98,8 @@ class TaskPolicyTest extends TestCase
     public function test_delete_returns_true_for_admin(): void
     {
         $admin = User::factory()->create();
-        $task = Task::factory()->create(['user_id' => 999]);
+        $otherUser = User::factory()->create();
+        $task = Task::factory()->create(['user_id' => $otherUser->id]);
 
         $admin->roles()->attach(
             \App\Models\Role::factory()->create(['name' => 'admin'])

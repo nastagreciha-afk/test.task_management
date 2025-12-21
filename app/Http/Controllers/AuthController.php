@@ -11,13 +11,11 @@ class AuthController extends Controller
 {
     public function __construct(
         private AuthService $authService
-    ) {
-    }
+    ) {}
 
     #[OA\Post(
         path: '/login',
         summary: 'Вход в систему',
-        tags: ['Authentication'],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -28,6 +26,7 @@ class AuthController extends Controller
                 ]
             )
         ),
+        tags: ['Authentication'],
         responses: [
             new OA\Response(
                 response: 200,
@@ -47,7 +46,7 @@ class AuthController extends Controller
     {
         $token = $this->authService->login($request->validated());
 
-        if (!$token) {
+        if (! $token) {
             return response()->json([
                 'message' => 'Invalid credentials',
             ], 401);
@@ -62,8 +61,8 @@ class AuthController extends Controller
     #[OA\Get(
         path: '/me',
         summary: 'Получить информацию о текущем пользователе',
-        tags: ['Authentication'],
         security: [['bearerAuth' => []]],
+        tags: ['Authentication'],
         responses: [
             new OA\Response(
                 response: 200,
@@ -89,8 +88,8 @@ class AuthController extends Controller
     #[OA\Post(
         path: '/logout',
         summary: 'Выход из системы',
-        tags: ['Authentication'],
         security: [['bearerAuth' => []]],
+        tags: ['Authentication'],
         responses: [
             new OA\Response(
                 response: 200,
@@ -106,11 +105,12 @@ class AuthController extends Controller
     )]
     public function logout(): JsonResponse
     {
-        auth()->logout();
+        auth('api')->logout(true);
 
         return response()->json([
             'message' => 'Successfully logged out',
         ]);
     }
 }
+
 

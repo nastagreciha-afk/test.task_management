@@ -11,8 +11,7 @@ class TaskService
 {
     public function __construct(
         private TaskRepository $taskRepository
-    ) {
-    }
+    ) {}
 
     public function getTasks(array $filters): LengthAwarePaginator
     {
@@ -21,33 +20,36 @@ class TaskService
 
     public function getTask(int $id): array
     {
-        $task = Task::findOrFail($id);
+        $task = $this->taskRepository->find($id);
         Gate::authorize('view', $task);
 
-        return $this->taskRepository->getTask($id);
+        return $task->toArray();
     }
 
     public function createTask(array $data): array
     {
         Gate::authorize('create', Task::class);
 
-        return $this->taskRepository->createTask($data);
+        $task = $this->taskRepository->createTask($data);
+        return $task->toArray();
     }
 
     public function updateTask(int $id, array $data): array
     {
-        $task = Task::findOrFail($id);
+        $task = $this->taskRepository->find($id);
         Gate::authorize('update', $task);
 
-        return $this->taskRepository->updateTask($id, $data);
+        $task = $this->taskRepository->updateTask($task, $data);
+        return $task->toArray();
     }
 
     public function deleteTask(int $id): void
     {
-        $task = Task::findOrFail($id);
+        $task = $this->taskRepository->find($id);
         Gate::authorize('delete', $task);
 
-        $this->taskRepository->deleteTask($id);
+        $this->taskRepository->deleteTask($task);
     }
 }
+
 

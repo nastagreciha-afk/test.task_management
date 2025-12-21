@@ -4,6 +4,7 @@ namespace Tests\Unit\Services;
 
 use App\Services\AuthService;
 use Illuminate\Support\Facades\Auth;
+use Mockery;
 use Tests\TestCase;
 
 class AuthServiceTest extends TestCase
@@ -16,6 +17,12 @@ class AuthServiceTest extends TestCase
         $this->authService = new AuthService();
     }
 
+    protected function tearDown(): void
+    {
+        Mockery::close();
+        parent::tearDown();
+    }
+
     public function test_login_returns_token_when_credentials_are_valid(): void
     {
         $credentials = [
@@ -24,15 +31,16 @@ class AuthServiceTest extends TestCase
         ];
         $expectedToken = 'test-jwt-token';
 
-        Auth::shouldReceive('guard')
-            ->with('api')
-            ->once()
-            ->andReturnSelf();
-
-        Auth::shouldReceive('attempt')
+        $guard = Mockery::mock();
+        $guard->shouldReceive('attempt')
             ->with($credentials)
             ->once()
             ->andReturn($expectedToken);
+
+        Auth::shouldReceive('guard')
+            ->with('api')
+            ->once()
+            ->andReturn($guard);
 
         $result = $this->authService->login($credentials);
 
@@ -46,15 +54,16 @@ class AuthServiceTest extends TestCase
             'password' => 'wrong-password',
         ];
 
-        Auth::shouldReceive('guard')
-            ->with('api')
-            ->once()
-            ->andReturnSelf();
-
-        Auth::shouldReceive('attempt')
+        $guard = Mockery::mock();
+        $guard->shouldReceive('attempt')
             ->with($credentials)
             ->once()
             ->andReturn(false);
+
+        Auth::shouldReceive('guard')
+            ->with('api')
+            ->once()
+            ->andReturn($guard);
 
         $result = $this->authService->login($credentials);
 
