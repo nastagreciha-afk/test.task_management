@@ -2,12 +2,32 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Foundation\Bus\DispatchesJobs;
-use Illuminate\Foundation\Validation\ValidatesRequests;
-use Illuminate\Routing\Controller as BaseController;
+use OpenApi\Attributes as OA;
 
-class Controller extends BaseController
+#[OA\Info(
+    version: '1.0.0',
+    title: 'Task Management API',
+    description: 'REST API для управления задачами с JWT аутентификацией и RBAC',
+    contact: new OA\Contact(
+        email: 'nastagreciha@gmail.com'
+    )
+)]
+#[OA\Server(
+    url: 'http://localhost:86/api',
+    description: 'Локальный сервер'
+)]
+#[OA\Server(
+    url: 'http://localhost/api',
+    description: 'Локальный сервер (без порта)'
+)]
+#[OA\SecurityScheme(
+    securityScheme: 'bearerAuth',
+    type: 'http',
+    scheme: 'bearer',
+    bearerFormat: 'JWT',
+    description: 'Введите JWT токен в формате: Bearer {token}'
+)]
+class Controller
 {
-    use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
+    //
 }
