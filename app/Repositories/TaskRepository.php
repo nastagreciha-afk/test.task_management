@@ -2,7 +2,9 @@
 
 namespace App\Repositories;
 
+use App\Enums\TaskStatus;
 use App\Models\Task;
+use App\Models\User;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class TaskRepository
@@ -11,45 +13,45 @@ class TaskRepository
     {
         $query = Task::query();
 
+        /** @var User $user */
         $user = auth()->user();
-        if (!$user->hasRole('admin')) {
+        if (! $user->hasRole('admin')) {
             $query->where('user_id', $user->id);
         }
 
         if (isset($filters['status'])) {
-            $query->where('status', $filters['status']);
+            $status = TaskStatus::tryFrom($filters['status']);
+            if ($status) {
+                $query->where('status', $status);
+            }
         }
 
         return $query->paginate($filters['per_page'] ?? 15);
     }
 
-    public function getTask(int $id): array
+    public function find(int $id): Task
     {
-        $task = Task::findOrFail($id);
-
-        return $task->toArray();
+        return Task::findOrFail($id);
     }
 
-    public function createTask(array $data): array
+    public function createTask(array $data): Task
     {
         $data['user_id'] = auth()->id();
-        $task = Task::create($data);
 
-        return $task->toArray();
+        return Task::create($data);
     }
 
-    public function updateTask(int $id, array $data): array
+    public function updateTask(Task $task, array $data): Task
     {
-        $task = Task::findOrFail($id);
         $task->update($data);
 
-        return $task->toArray();
+        return $task->fresh();
     }
 
-    public function deleteTask(int $id): void
+    public function deleteTask(Task $task): void
     {
-        $task = Task::findOrFail($id);
         $task->delete();
     }
 }
+
 

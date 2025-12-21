@@ -4,18 +4,14 @@
         "title": "Task Management API",
         "description": "REST API для управления задачами с JWT аутентификацией и RBAC",
         "contact": {
-            "email": "admin@example.com"
+            "email": "nastagreciha@gmail.com"
         },
         "version": "1.0.0"
     },
     "servers": [
         {
-            "url": "http://localhost:86/api",
-            "description": "Локальный сервер"
-        },
-        {
             "url": "http://localhost/api",
-            "description": "Локальный сервер (без порта)"
+            "description": "Локальный сервер"
         }
     ],
     "paths": {
